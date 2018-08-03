@@ -30,6 +30,14 @@ class Sender (Thread):
 			data=self.clientSocket.recv(1024)
 			#print('receive Data : ', data.decode())
 
+	'''
+	When there is no movement for a certain period of time
+	sned google cloud message to client. call by 
+	'''
+	#def gcmMsg(detectingCount):
+	#TODO
+
+
 '''
 main server has clientThread list
 if connect client, make thread(Sender class) and and thread list(clientThreads)
@@ -61,52 +69,56 @@ class Server (Thread):
 		return self.clientThreads
 
 '''
-
+Image Porcessing class
 '''
 class ImageProcess(Thread):
 
 	def __init__(self, cam):
 		Thread.__init__(self) 
 		self.cam=cam
-		#self.width=int(cam.get(CV_CAP_PROP_FRAME_WIDTH)
-		#self.height=int(cam.get(CV_CAP_PROP_FRAME_HEIGHT))
+		# for check motionless time(hour)
 		self.lastMovement=time.time()
 		self.detectingCount=1
+
+		# write time detecting movement
 		self.detectingMove = []
+			
+	def getResizedImg(self):
+		ret, img=cam.read()
+		return cv2.resize(img, (128, 80), interpolation = cv2.INTER_AREA)
 
 	def run(self):
-
-		ret, self.bgImg=cam.read()
+		self.bgImg=self.getResizedImg()
 
 		while True:
-			ret, curImg=self.cam.read()
+			self.curImg=self.getResizedImg()
 
-			self.Img2String(curImg)
-			self.getDiffCurBtwBg(curImg)
+			self.Img2String()
+			self.getDiffCurBtwBg()
 
 			term=time.time()-self.lastMovement
 
 			if term > self.detectingCount * 3600 :
 				self.detectingCount=self.detectingCount+1
-				
+
+			self.bgImg=self.curImg
+
 	'''
 	select comparing image to detect movement
 	'''
-	def getDiffCurBtwBg(self, curImg):
+	def getDiffCurBtwBg(self):
 		print('diff func start')
-
-		#convert current image to gray imae
-		curGrayImg=cv2.cvtColor(curImg, cv2.COLOR_BGR2GRAY)
-		#convert 
+		#convert current image to gray image
+		curGrayImg=cv2.cvtColor(self.curImg, cv2.COLOR_BGR2GRAY)
+		#convert comparing image to gray image
 		bgGrayImg=cv2.cvtColor(self.bgImg, cv2.COLOR_BGR2GRAY)
 
 		diffImg=cv2.absdiff(curGrayImg, bgGrayImg)
 
 		count=0
+
 		print('count init: ', count)
-		#print(type(diffImg))
-		#print(diffImg)
-		#print(diffImg.shape)
+		print('diffList len : ', len(diffImg[0]))
 
 		for diffList in diffImg:
 			for diff in diffList:
@@ -125,15 +137,13 @@ class ImageProcess(Thread):
 	'''
 	read cam image and convert to stringData=base64
 	'''
-	def Img2String(self, culImg):
-		ret, curImg=self.cam.read()
-		sendImg=cv2.resize(curImg, (128, 80), interpolation = cv2.INTER_AREA)
+	def Img2String(self):
+		
 		encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),90]
-		result,imagencode=cv2.imencode('.jpg',sendImg,encode_param)
+		result,imagencode=cv2.imencode('.jpg', self.curImg, encode_param)
 		data=np.array(imagencode)
 
 		self.stringData=base64.encodestring(data.tostring())
-
 
 	def getStringData(self):
 		return self.stringData
