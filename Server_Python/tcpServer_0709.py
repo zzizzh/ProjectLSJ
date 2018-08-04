@@ -107,7 +107,7 @@ class ImageProcess(Thread):
 	select comparing image to detect movement
 	'''
 	def getDiffCurBtwBg(self):
-		print('diff func start')
+		#print('diff func start')
 		#convert current image to gray image
 		curGrayImg=cv2.cvtColor(self.curImg, cv2.COLOR_BGR2GRAY)
 		#convert comparing image to gray image
@@ -117,22 +117,22 @@ class ImageProcess(Thread):
 
 		count=0
 
-		print('count init: ', count)
-		print('diffList len : ', len(diffImg[0]))
+		#print('count init: ', count)
+		#print('diffList len : ', len(diffImg[0]))
 
 		for diffList in diffImg:
 			for diff in diffList:
 				if diff > 50:
 					count=count+1
 
-		print('diff > 50 count : ', count)
+		#print('diff > 50 count : ', count)
 
 		if count > 500 :
 			self.lastMovement=time.time()
 			self.detectingMove.append(time.ctime())
 			self.detectingCount=1
 
-		print('diff func end')
+		#print('diff func end')
 
 	'''
 	read cam image and convert to stringData=base64
